@@ -7,6 +7,6 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/home/pi/piscope/camera-stream.sh
+ExecStart=/home/pi/src/minigrbl/camera-stream.sh
 User=pi
 Restart=always
