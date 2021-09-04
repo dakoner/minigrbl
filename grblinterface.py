@@ -55,11 +55,11 @@ class GRBL:
     def on_message(self, client, userdata, message):
         if message.topic == 'grblesp32/command':
             command = message.payload.decode('utf-8')
-            print("Received command", command)
             self.write(command + "\n")
         elif message.topic == 'grblesp32/reset':
-            print("Received reset")
             self.reset()
+        elif message.topic == 'grblesp32/cancel':
+            self.write(0x85)
 
     def run(self):
         try:
