@@ -45,7 +45,6 @@ class GRBL:
         self.client =  mqtt.Client("server")
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        self.client.on_disconnect = self.on_disconnect
         self.client.loop_start()
         self.client.connect("inspectionscope.local")
 
@@ -54,18 +53,13 @@ class GRBL:
         self.client.subscribe("grblesp32/reset")
 
     def on_message(self, client, userdata, message):
-        print(message.topic, message.payload)
         if message.topic == 'grblesp32/command':
             command = message.payload.decode('utf-8')
             print("Received command", command)
             self.write(command + "\n")
         elif message.topic == 'grblesp32/reset':
+            print("Received reset")
             self.reset()
-
-    def on_disconnect(self, *args):
-        self.info_win.addstr(1, 2, "disconnect")
-        self.info_win.clrtoeol()
-        self.info_win.refresh()
 
     def run(self):
         try:
