@@ -40,7 +40,8 @@ class Driver:
         self.info_win.clrtoeol()
         self.info_win.box()
         self.info_win.refresh()
-        self.client.subscribe("grblesp32/command")
+        self.client.subscribe("grblesp32/status")
+        self.client.subscribe("grblesp32/output")
 
     def on_message(self, client, userdata, message):
         try:
@@ -65,27 +66,34 @@ class Driver:
                 raise RuntimeError
             elif ch == ord('r'):
                 self.command_win.addstr(1, 2, "reset")
-                
+                self.client.publish("grblesp32/reset", "")
             elif ch == ord('u'):
                 self.command_win.addstr(1, 2, "unlock")
-               
+                self.client.publish("grblesp32/command", "$X")
+
             elif ch == ord('a'):
                 self.command_win.addstr(1, 2, "forward")
-               
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Z-0.05")
+
             elif ch == ord('z'):
                 self.command_win.addstr(1, 2, "back")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Z0.05")
                
             elif ch == curses.KEY_UP:
                 self.command_win.addstr(1, 2, "up")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 X1")
              
             elif ch == curses.KEY_DOWN:
                 self.command_win.addstr(1, 2, "down")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 X-1")
               
             elif ch == curses.KEY_LEFT:
                 self.command_win.addstr(1, 2, "left")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Y1")
               
             elif ch == curses.KEY_RIGHT:
                 self.command_win.addstr(1, 2, "right")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Y-1")
               
             else:
                 refresh_required = False
