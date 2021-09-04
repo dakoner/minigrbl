@@ -1,0 +1,12 @@
+[Unit]
+Description=Raspberry Pi Cam Stream
+After=network-online.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/piscope/camera-stream.sh
+User=pi
+Restart=always
