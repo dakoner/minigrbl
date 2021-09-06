@@ -71,7 +71,7 @@ class Driver:
                 self.command_win.addstr(1, 2, "unlock")
                 self.client.publish("grblesp32/command", "$X")
 
-            elif ch == ord('a'):
+            elif ch == ord('q'):
                 self.command_win.addstr(1, 2, "forward")
                 self.client.publish("grblesp32/command", "$J=G91 F10000 Z-0.05")
 
@@ -79,19 +79,19 @@ class Driver:
                 self.command_win.addstr(1, 2, "back")
                 self.client.publish("grblesp32/command", "$J=G91 F10000 Z0.05")
                
-            elif ch == curses.KEY_UP:
+            elif ch == ord('w'):
                 self.command_win.addstr(1, 2, "up")
                 self.client.publish("grblesp32/command", "$J=G91 F10000 X1")
              
-            elif ch == curses.KEY_DOWN:
+            elif ch == ord('s'):
                 self.command_win.addstr(1, 2, "down")
                 self.client.publish("grblesp32/command", "$J=G91 F10000 X-1")
               
-            elif ch == curses.KEY_LEFT:
+            elif ch == ord('a'):
                 self.command_win.addstr(1, 2, "left")
                 self.client.publish("grblesp32/command", "$J=G91 F10000 Y1")
               
-            elif ch == curses.KEY_RIGHT:
+            elif ch == ord('d'):
                 self.command_win.addstr(1, 2, "right")
                 self.client.publish("grblesp32/command", "$J=G91 F10000 Y-1")
               
