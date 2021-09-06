@@ -81,19 +81,19 @@ class Driver:
                
             elif ch == ord('w'):
                 self.command_win.addstr(1, 2, "up")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 X1")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 X.1")
              
             elif ch == ord('s'):
                 self.command_win.addstr(1, 2, "down")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 X-1")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 X-.1")
               
             elif ch == ord('a'):
                 self.command_win.addstr(1, 2, "left")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 Y1")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Y.1")
               
             elif ch == ord('d'):
                 self.command_win.addstr(1, 2, "right")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 Y-1")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Y-.1")
               
             else:
                 refresh_required = False
