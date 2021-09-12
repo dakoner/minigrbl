@@ -8,7 +8,7 @@ import threading
 from queue import Queue
 import math
 
-STEP_SIZE=2
+STEP_SIZE=.1
 
 class Driver:
     def __init__(self):
@@ -68,10 +68,10 @@ class Driver:
                 type_, code, state = event.ev_type, event.code, event.state 
                 if type_ == 'Key':
                     if code == 'BTN_TL' and state == 1:
-                            cmd = "$J=G91 F10000 Z-0.05"
+                            cmd = "$J=G91 F10000 Z-1"
                             self.client.publish("grblesp32/command", cmd)
                     elif code == 'BTN_TR' and state == 1:
-                            cmd = "$J=G91 F10000 Z0.05"
+                            cmd = "$J=G91 F10000 Z1"
                             self.client.publish("grblesp32/command", cmd)
                     elif code == 'BTN_SELECT' and state == 1:
                             cmd = "M5"
