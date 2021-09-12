@@ -1,5 +1,5 @@
 [Unit]
-Description=MQTT grblinterface
+Description=MQTT serial interface
 After=network-online.target
 
 [Install]
@@ -7,7 +7,7 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/home/pi/src/minigrbl/grblinterface.py
+ExecStart=python3 /home/pi/src/minigrbl/serial_interface.py
 User=pi
 Restart=always
 
