@@ -42,14 +42,14 @@ class Driver:
                     step = -STEP_SIZE
                 else:
                     step = STEP_SIZE
-                cmd += " Y%d" % step
+                cmd += " Y%f" % step
             if self.move_y:
                 if self.last_y > 0:
                     step = -STEP_SIZE
                 else:
                     step = STEP_SIZE
 
-                cmd += " X%d" % step
+                cmd += " X%f" % step
             feed = int(math.sqrt((self.last_x * self.last_x) + (self.last_y * self.last_y)))
             cmd += " F%d" % feed
             self.client.publish("grblesp32/command", cmd)
@@ -68,10 +68,10 @@ class Driver:
                 type_, code, state = event.ev_type, event.code, event.state 
                 if type_ == 'Key':
                     if code == 'BTN_TL' and state == 1:
-                            cmd = "$J=G91 F10000 Z-1"
+                            cmd = "$J=G91 F10000 Z-%f" % STEP_SIZE
                             self.client.publish("grblesp32/command", cmd)
                     elif code == 'BTN_TR' and state == 1:
-                            cmd = "$J=G91 F10000 Z1"
+                            cmd = "$J=G91 F10000 Z%f" % STEP_SIZE
                             self.client.publish("grblesp32/command", cmd)
                     elif code == 'BTN_SELECT' and state == 1:
                             cmd = "M5"
@@ -89,11 +89,11 @@ class Driver:
                 elif type_ == 'Absolute':
                     if code in ('ABS_HAT0X', 'ABS_HAT0Y'):
                         if state in (-1, 1):
-                            move = -15 * state
+                            move = STEP_SIZE * state
                             dir_ = 'X'
                             if code == 'ABS_HAT0X':
                                 dir_ = 'Y'
-                            cmd = "$J=G91 F10000 %s%d" % (dir_, move)
+                            cmd = "$J=G91 F10000 %s%f" % (dir_, move)
                             self.client.publish("grblesp32/command", cmd)
                     elif code == 'ABS_X':
                         if abs(state) > 100:
