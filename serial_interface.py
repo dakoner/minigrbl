@@ -31,8 +31,10 @@ class SerialInterface(threading.Thread):
 
 
     def on_message(self, client, userdata, message):
+        print(client, userdata, message)
         if message.topic == 'grblesp32/command':
             command = message.payload.decode('utf-8')
+            print("Got command: ", command)
             self.write(command + "\n")
         elif message.topic == 'grblesp32/reset':
             if message.payload.decode('utf-8') == 'hard':
@@ -56,7 +58,8 @@ class SerialInterface(threading.Thread):
         while True:
             if self.serialport.in_waiting > 0:
                 data = self.serialport.read(self.serialport.in_waiting)
-                sys.stdout.write(data.decode('ascii'))
+                print("read: ", data)
+                sys.stdout.write(data.decode('utf-8'))
                 self.client.publish("grblesp32/output", data)
             time.sleep(0.01)
 
@@ -66,10 +69,12 @@ class SerialInterface(threading.Thread):
         self.serialport.close()
         
     def write(self, data):
-        self.serialport.write(bytes(data,"ascii"))
+        print("writing: ", data)
+        self.serialport.write(bytes(data,"utf-8"))
 
 
 def main():
+    print("starting")
     s = SerialInterface()
     s.start()
     s.join()    
