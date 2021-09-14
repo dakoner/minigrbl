@@ -1,42 +1,71 @@
 #!/usr/bin/python3
+import os
+import termios
+import sys
 import time
 import paho.mqtt.client as mqtt
-from inputs import devices, get_key
-STEP_SIZE=.1
+import tty
+import fcntl
+
+STEP_SIZE=.5
 
 class Driver:
     def __init__(self):
         self.client =  mqtt.Client("client")
+        self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
+        self.client.connect_async("inspectionscope.local")
         self.client.loop_start()
-        self.client.connect("inspectionscope.local")
 
-        keyboard = devices.keyboards[1]
-        print("wait")
+    def on_connect(self, client, userdata, flags, rc):
+        print("connected")
+    def on_disconnect(self, client, userdata, flags, rc):
+        print("disconnected")
+
+    def run(self):
         while True:
-            events = keyboard.read()
-            for event in events:
-                type_, code, state = event.ev_type, event.code, event.state
-                if type_ == 'Key':
-                    print(type_, code, state)
-                    if code == 'KEY_Q' and state == 1:
-                        cmd = "$J=G91 F10000 Z-%f" % STEP_SIZE
-                        self.client.publish("grblesp32/command", cmd )
-                    elif code == 'KEY_Z' and state == 1:
-                        cmd = "$J=G91 F10000 Z%f" % STEP_SIZE
-                        self.client.publish("grblesp32/command", cmd )
-                    elif code == 'KEY_A' and state == 1:
-                        cmd = "$J=G91 F10000 X-%f" % STEP_SIZE
-                        self.client.publish("grblesp32/command", cmd )
-                    elif code == 'KEY_D' and state == 1:
-                        cmd = "$J=G91 F10000 X%f" % STEP_SIZE
-                        self.client.publish("grblesp32/command", cmd )
-                    elif code == 'KEY_W' and state == 1:
-                        cmd = "$J=G91 F10000 Y%f" % STEP_SIZE
-                        self.client.publish("grblesp32/command", cmd )
-                    elif code == 'KEY_S' and state == 1:
-                        cmd = "$J=G91 F10000 Y-%f" % STEP_SIZE
-                        self.client.publish("grblesp32/command", cmd )   
-print("start")
-d = Driver()
-d.run()
- 
+            c = sys.stdin.read(1)
+            if c:
+                print(c)
+                cmd = None
+                if c == '/':
+                    return
+                if c == 'q':
+                    cmd = "$J=G91 F10000 Z-%f" % STEP_SIZE
+                elif c == 'z':
+                    cmd = "$J=G91 F10000 Z%f" % STEP_SIZE
+                elif c == 'a':
+                    cmd = "$J=G91 F10000 X-%f" % STEP_SIZE
+                elif c == 'd':
+                    cmd = "$J=G91 F10000 X%f" % STEP_SIZE
+                elif c == 'w':
+                    cmd = "$J=G91 F10000 Y%f" % STEP_SIZE
+                elif c == 's':
+                    cmd = "$J=G91 F10000 Y-%f" % STEP_SIZE
+                if cmd:
+                    print(self.client.publish("grblesp32/command", cmd))
+
+def main():
+    fd = sys.stdin.fileno()
+
+    oldterm = termios.tcgetattr(fd)
+    newattr = termios.tcgetattr(fd)
+    tty.setraw(sys.stdin)
+   
+
+    oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
+    
+    d = Driver()
+    try:
+        d.run()
+    except:
+        termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
+        fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
+        raise
+    finally:
+        termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
+        fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
+   
+if __name__ == '__main__':
+     main()
