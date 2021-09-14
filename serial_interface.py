@@ -65,9 +65,8 @@ class SerialInterface(threading.Thread):
         except serial.SerialException as e:
             sys.stderr.write('Could not open serial port {}: {}\n'.format(ser.name, e))
             return
-        #self.reset()
-        self.serialport.dtr=True
-        self.serialport.rts=True
+        self.reset()
+        
         while True:
             if self.serialport.in_waiting > 0:
                 data = self.serialport.read(self.serialport.in_waiting)
