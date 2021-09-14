@@ -10,13 +10,16 @@ class SerialInterface(threading.Thread):
     def __init__(self, port="/dev/ttyUSB0", baud=115200):
         super().__init__()
 
-        self.serialport = serial.Serial(port, baud,
-                                        parity=serial.PARITY_NONE, 
-                                        stopbits=serial.STOPBITS_ONE,
-                                        bytesize=serial.EIGHTBITS,
-                                        dsrdtr=True)
-        self.serialport.flushInput()
-        self.serialport.flushOutput()
+        self.serialport = serial.serial_for_url(port, do_not_open=True)
+        self.serialport.baudrate = baud
+        self.serialport.parity = serial.PARITY_NONE
+        self.serialport.stopbits=serial.STOPBITS_ONE
+        self.serialport.bytesize=serial.EIGHTBITS
+        self.serialport.dsrdtr= True
+        self.serialport.ctsrts= True
+        self.serialport.rts = False
+        self.serialport.dtr = False
+       
 
         self.client =  mqtt.Client("server")
         self.client.on_connect = self.on_connect
@@ -28,7 +31,6 @@ class SerialInterface(threading.Thread):
         self.client.subscribe("grblesp32/command")
         self.client.subscribe("grblesp32/reset")
         self.client.subscribe("grblesp32/cancel")
-
 
     def on_message(self, client, userdata, message):
         print(client, userdata, message)
@@ -46,15 +48,26 @@ class SerialInterface(threading.Thread):
 
     def soft_reset(self):
         print("soft reset")
-        self.serialport.write("\x18") # Ctrl-X
+        self.write("\x18") # Ctrl-X
 
     def reset(self):
-        print("reset")
-        self.serialport.dtr = True
-        time.sleep(0.5)
+        print("reset\r")
         self.serialport.dtr = False
+        time.sleep(.1)
+        self.serialport.dtr = True
+        self.serialport.rts = False
+        time.sleep(.1)
+        self.serialport.rts = True
 
     def run(self):
+        try:
+            self.serialport.open()
+        except serial.SerialException as e:
+            sys.stderr.write('Could not open serial port {}: {}\n'.format(ser.name, e))
+            return
+        #self.reset()
+        self.serialport.dtr=True
+        self.serialport.rts=True
         while True:
             if self.serialport.in_waiting > 0:
                 data = self.serialport.read(self.serialport.in_waiting)
@@ -63,14 +76,10 @@ class SerialInterface(threading.Thread):
                 self.client.publish("grblesp32/output", data)
             time.sleep(0.01)
 
-    def stop(self):
-        self.serialport.flushInput()
-        self.serialport.flushOutput()
-        self.serialport.close()
-        
     def write(self, data):
         print("writing: ", data)
         self.serialport.write(bytes(data,"utf-8"))
+        self.serialport.flush()
 
 
 def main():
