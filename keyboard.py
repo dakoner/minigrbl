@@ -7,11 +7,12 @@ import paho.mqtt.client as mqtt
 import tty
 import fcntl
 
-STEP_SIZE=.5
+XY_STEP_SIZE=.5
+Z_STEP_SIZE=0.15
 
 class Driver:
     def __init__(self):
-        self.client =  mqtt.Client("client")
+        self.client =  mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
         self.client.connect_async("inspectionscope.local")
@@ -31,19 +32,21 @@ class Driver:
                 if c == '/':
                     return
                 if c == 'q':
-                    cmd = "$J=G91 F10000 Z-%f" % STEP_SIZE
+                    cmd = "$J=G91 F10000 Z-%f" % Z_STEP_SIZE
                 elif c == 'z':
-                    cmd = "$J=G91 F10000 Z%f" % STEP_SIZE
+                    cmd = "$J=G91 F10000 Z%f" % Z_STEP_SIZE
                 elif c == 'a':
-                    cmd = "$J=G91 F10000 X-%f" % STEP_SIZE
+                    cmd = "$J=G91 F10000 Y-%f" % XY_STEP_SIZE
                 elif c == 'd':
-                    cmd = "$J=G91 F10000 X%f" % STEP_SIZE
+                    cmd = "$J=G91 F10000 Y%f" % XY_STEP_SIZE
                 elif c == 'w':
-                    cmd = "$J=G91 F10000 Y%f" % STEP_SIZE
+                    cmd = "$J=G91 F10000 X%f" % XY_STEP_SIZE
                 elif c == 's':
-                    cmd = "$J=G91 F10000 Y-%f" % STEP_SIZE
+                    cmd = "$J=G91 F10000 X-%f" % XY_STEP_SIZE
+                elif c == 'r':
+                    self.client.publish("grblesp32/reset", "hard")
                 if cmd:
-                    print(self.client.publish("grblesp32/command", cmd))
+                    self.client.publish("grblesp32/command", cmd)
 
 def main():
     fd = sys.stdin.fileno()
