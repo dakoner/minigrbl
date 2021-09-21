@@ -2,19 +2,27 @@
 import time
 import paho.mqtt.client as mqtt
 import curses
-        
+from line_processor import Processor
+
 class Driver:
     def __init__(self, stdscr):
+        self.processor = Processor()
+
         self.stdscr = stdscr
         self.stdscr.box()
         self.stdscr.nodelay(1)
-        self.stdscr.border(0)
 
         self.command_win = self.stdscr.subwin(3, 10, 3, 3)
         self.command_win.box()
         self.command_win.refresh()
 
-        self.log_win = self.stdscr.subwin(40, 120, 13, 3)
+
+        self.state_win = self.stdscr.subwin(3, 80, 6, 3)
+        self.state_win.box()
+        self.state_win.refresh()
+
+        self.log_win = self.stdscr.subwin(30, 80, 13, 3)
+        self.log_win.scrollok(True)
         self.log_win.box()
         self.log_win.refresh()
         
@@ -24,12 +32,14 @@ class Driver:
 
         self.stdscr.refresh()
 
-        self.client =  mqtt.Client("client")
+        self.client =  mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.on_disconnect = self.on_disconnect
-        self.client.loop_start()
         self.client.connect("inspectionscope.local")
+
+        self.time = time.time()
+        self.client.loop_start()
 
 
     def publish(self, topic, payload):
@@ -45,9 +55,23 @@ class Driver:
 
     def on_message(self, client, userdata, message):
         try:
-            self.log_win.addstr(3,2, message.payload.decode('utf-8'))
-            #self.log_win.scroll()
+            processed_lines = self.processor.run(message.payload.decode('utf-8'))
+            for line in processed_lines:
+                if line.startswith("<"):
+                    self.state_win.addstr(1, 2, line)
+                    self.state_win.clrtoeol()
+                elif line.startswith("ok"):
+                    pass
+                elif line.strip() == '':
+                    pass
+                else:
+                    self.log_win.addstr(29, 1, line)
+                    self.log_win.clrtoeol()
+                    self.log_win.scroll()
+            self.log_win.box()
             self.log_win.refresh()
+            self.state_win.box()
+            self.state_win.refresh()
             self.stdscr.refresh()
         except:
             raise RuntimeError
@@ -59,6 +83,10 @@ class Driver:
 
     def run(self):
         while True:
+            t = time.time()
+            if t - self.time > .1:
+                self.client.publish("grblesp32/command", "?")
+                self.time = t
             ch = self.stdscr.getch()
             
             refresh_required = True
