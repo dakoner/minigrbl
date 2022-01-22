@@ -7,8 +7,8 @@ import paho.mqtt.client as mqtt
 import tty
 import fcntl
 
-XY_STEP_SIZE=.5
-Z_STEP_SIZE=0.15
+XY_STEP_SIZE=10
+Z_STEP_SIZE=10
 
 class Driver:
     def __init__(self):

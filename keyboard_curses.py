@@ -84,45 +84,38 @@ class Driver:
     def run(self):
         while True:
             t = time.time()
-            if t - self.time > .1:
+            if t - self.time > 1:
                 self.client.publish("grblesp32/command", "?")
                 self.time = t
             ch = self.stdscr.getch()
             
             refresh_required = True
-            if ch == ord('q'):
-                raise RuntimeError
-            elif ch == ord('r'):
+            #if ch == ord('q'):
+            #    raise RuntimeError
+            if ch == ord('r'):
                 self.command_win.addstr(1, 2, "reset")
                 self.client.publish("grblesp32/reset", "")
-            elif ch == ord('u'):
+            elif ch == ord(' '):
                 self.command_win.addstr(1, 2, "unlock")
                 self.client.publish("grblesp32/command", "$X")
-
             elif ch == ord('q'):
-                self.command_win.addstr(1, 2, "forward")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 Z-0.05")
-
-            elif ch == ord('z'):
-                self.command_win.addstr(1, 2, "back")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 Z0.05")
-               
-            elif ch == ord('w'):
                 self.command_win.addstr(1, 2, "up")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 X.1")
-             
-            elif ch == ord('s'):
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Z-10")
+            elif ch == ord('z'):
                 self.command_win.addstr(1, 2, "down")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 X-.1")
-              
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Z10")
+            elif ch == ord('w'):
+                self.command_win.addstr(1, 2, "forward")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 X10")
+            elif ch == ord('s'):
+                self.command_win.addstr(1, 2, "back")
+                self.client.publish("grblesp32/command", "$J=G91 F10000 X-10")
             elif ch == ord('a'):
                 self.command_win.addstr(1, 2, "left")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 Y.1")
-              
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Y10")
             elif ch == ord('d'):
                 self.command_win.addstr(1, 2, "right")
-                self.client.publish("grblesp32/command", "$J=G91 F10000 Y-.1")
-              
+                self.client.publish("grblesp32/command", "$J=G91 F10000 Y-10")
             else:
                 refresh_required = False
 
