@@ -36,7 +36,7 @@ class Driver:
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.on_disconnect = self.on_disconnect
-        self.client.connect("inspectionscope.local")
+        self.client.connect("awow.local")
 
         self.time = time.time()
         self.client.loop_start()

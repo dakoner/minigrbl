@@ -15,7 +15,7 @@ class Driver:
         self.client =  mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
-        self.client.connect_async("inspectionscope.local")
+        self.client.connect_async("awow.local")
         self.client.loop_start()
 
     def on_connect(self, client, userdata, flags, rc):
