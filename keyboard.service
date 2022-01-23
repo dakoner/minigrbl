@@ -5,7 +5,7 @@ Conflicts=getty@tty1.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/pi/src/minigrbl/keyboard.py
+ExecStart=/usr/bin/python3 /home/dek/src/minigrbl/keyboard.py
 StandardInput=tty-force
 StandardOutput=inherit
 StandardError=inherit

@@ -7,7 +7,7 @@ WantedBy=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=python3 /home/pi/src/minigrbl/serial_interface.py
-User=pi
+ExecStart=python3 /home/dek/src/minigrbl/serial_interface.py
+User=dek
 Restart=always
 
