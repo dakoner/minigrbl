@@ -16,8 +16,6 @@ class SerialInterface(threading.Thread):
         self.serialport.stopbits=serial.STOPBITS_ONE
         self.serialport.bytesize=serial.EIGHTBITS
         self.serialport.dsrdtr= True
-        self.serialport.ctsrts= True
-        self.serialport.rts = False
         self.serialport.dtr = False
        
 
@@ -25,7 +23,7 @@ class SerialInterface(threading.Thread):
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.loop_start()
-        self.client.connect("inspectionscope.local")
+        self.client.connect("awow.local")
 
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe("grblesp32/command")
@@ -53,11 +51,8 @@ class SerialInterface(threading.Thread):
     def reset(self):
         print("reset\r")
         self.serialport.dtr = False
-        time.sleep(.1)
+        time.sleep(.5)
         self.serialport.dtr = True
-        self.serialport.rts = False
-        time.sleep(.1)
-        self.serialport.rts = True
 
     def run(self):
         try:
