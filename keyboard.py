@@ -7,7 +7,7 @@ import paho.mqtt.client as mqtt
 import tty
 import fcntl
 
-XY_STEP_SIZE=10
+XY_STEP_SIZE=100
 Z_STEP_SIZE=10
 
 class Driver:
@@ -36,9 +36,9 @@ class Driver:
                 elif c == 'z':
                     cmd = "$J=G91 F10000 Z%f" % Z_STEP_SIZE
                 elif c == 'a':
-                    cmd = "$J=G91 F10000 Y-%f" % XY_STEP_SIZE
-                elif c == 'd':
                     cmd = "$J=G91 F10000 Y%f" % XY_STEP_SIZE
+                elif c == 'd':
+                    cmd = "$J=G91 F10000 Y-%f" % XY_STEP_SIZE
                 elif c == 'w':
                     cmd = "$J=G91 F10000 X%f" % XY_STEP_SIZE
                 elif c == 's':

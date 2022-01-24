@@ -3,15 +3,15 @@ import signal
 from PyQt5 import QtGui, QtCore, QtWidgets
 from simple_pyspin import Camera
 import paho.mqtt.client as mqtt
-
+import cv2
 
 XY_STEP_SIZE=10
 Z_STEP_SIZE=10
 
-class CameraReader(QtCore.QThread):
+class PySpinCameraReader(QtCore.QThread):
     signal = QtCore.pyqtSignal(QtGui.QImage)
     def __init__(self):
-        super(CameraReader, self).__init__()
+        super(PySpinCameraReader, self).__init__()
         self.cam = Camera()
         self.cam.init()
 
@@ -21,6 +21,23 @@ class CameraReader(QtCore.QThread):
             img = self.cam.get_array()
             image = QtGui.QImage(img, self.cam.Width, self.cam.Height, QtGui.QImage.Format_Grayscale8)
             self.signal.emit(image)
+
+
+class Cv2CameraReader(QtCore.QThread):
+    signal = QtCore.pyqtSignal(QtGui.QImage)
+    def __init__(self):
+        super(Cv2CameraReader, self).__init__()
+        self.cam = cv2.VideoCapture(0)
+        self.width = self.cam.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+    def run(self):
+        while True:
+            ret, img = self.cam.read()
+            print(ret)
+            if ret:
+                image = QtGui.QImage(img.data, self.width, self.height, QtGui.QImage.Format_RGB888)
+                self.signal.emit(image)
 
 class Window(QtWidgets.QWidget):
 
@@ -35,7 +52,7 @@ class Window(QtWidgets.QWidget):
 
         self.setFocus()
 
-        self.camera = CameraReader()
+        self.camera = Cv2CameraReader()
         self.camera.start()
         self.camera.signal.connect(self.imageTo)
 
