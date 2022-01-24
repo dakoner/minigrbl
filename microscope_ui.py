@@ -1,26 +1,26 @@
 import sys
 import signal
 from PyQt5 import QtGui, QtCore, QtWidgets
-from simple_pyspin import Camera
+#from simple_pyspin import Camera
 import paho.mqtt.client as mqtt
 import cv2
 
-XY_STEP_SIZE=10
+XY_STEP_SIZE=1
 Z_STEP_SIZE=10
 
-class PySpinCameraReader(QtCore.QThread):
-    signal = QtCore.pyqtSignal(QtGui.QImage)
-    def __init__(self):
-        super(PySpinCameraReader, self).__init__()
-        self.cam = Camera()
-        self.cam.init()
+# class PySpinCameraReader(QtCore.QThread):
+#     signal = QtCore.pyqtSignal(QtGui.QImage)
+#     def __init__(self):
+#         super(PySpinCameraReader, self).__init__()
+#         self.cam = Camera()
+#         self.cam.init()
 
-    def run(self):         
-        self.cam.start()
-        while True:
-            img = self.cam.get_array()
-            image = QtGui.QImage(img, self.cam.Width, self.cam.Height, QtGui.QImage.Format_Grayscale8)
-            self.signal.emit(image)
+#     def run(self):         
+#         self.cam.start()
+#         while True:
+#             img = self.cam.get_array()
+#             image = QtGui.QImage(img, self.cam.Width, self.cam.Height, QtGui.QImage.Format_Grayscale8)
+#             self.signal.emit(image)
 
 
 class Cv2CameraReader(QtCore.QThread):
@@ -28,13 +28,13 @@ class Cv2CameraReader(QtCore.QThread):
     def __init__(self):
         super(Cv2CameraReader, self).__init__()
         self.cam = cv2.VideoCapture(0)
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 2048)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1536)
         self.width = self.cam.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
-
     def run(self):
         while True:
             ret, img = self.cam.read()
-            print(ret)
             if ret:
                 image = QtGui.QImage(img.data, self.width, self.height, QtGui.QImage.Format_RGB888)
                 self.signal.emit(image)
@@ -59,7 +59,7 @@ class Window(QtWidgets.QWidget):
         self.client =  mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
-        self.client.connect_async("awow.local")
+        self.client.connect_async("gork.local")
         self.client.loop_start()
 
     def on_connect(self, client, userdata, flags, rc):
@@ -88,7 +88,7 @@ class Window(QtWidgets.QWidget):
 
 
     def imageTo(self, image): 
-        image = QtGui.QPixmap.fromImage(image).scaled(QtWidgets.QApplication.instance().primaryScreen().size())
+        image = QtGui.QPixmap.fromImage(image).scaled(QtWidgets.QApplication.instance().primaryScreen().size(), QtCore.Qt.KeepAspectRatio)
         self.image_widget.setPixmap(image)
 
 if __name__ == '__main__':
