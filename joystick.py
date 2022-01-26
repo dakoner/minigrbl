@@ -8,13 +8,13 @@ import threading
 from queue import Queue
 import math
 
-STEP_SIZE=.1
+STEP_SIZE=0.5
 
 class Driver:
     def __init__(self):
         self.client =  mqtt.Client("client")
         self.client.loop_start()
-        self.client.connect("inspectionscope.local")
+        self.client.connect("gork.local")
 
         self.lastTime = time.time()
         self.lastValue = 0
@@ -31,8 +31,7 @@ class Driver:
     def gamepad(self):
         while True:
             events = get_gamepad()
-            for event in events:
-                self.queue.put(event)
+            self.queue.put(events)
  
     def do_status(self):
         if self.move_x or self.move_y:
@@ -50,69 +49,73 @@ class Driver:
                     step = STEP_SIZE
 
                 cmd += " X%f" % step
-            feed = int(math.sqrt((self.last_x * self.last_x) + (self.last_y * self.last_y)))
+            feed = int(math.sqrt((self.last_x * self.last_x) + (self.last_y * self.last_y))/250.)
             cmd += " F%d" % feed
+            print("send command", cmd)
             self.client.publish("grblesp32/command", cmd)
 
     def run(self):
         while True:
-            t = time.time()
-            dt = t - self.lastTime
-            if t-self.lastTime > .05:
-                self.do_status()
+            time.sleep(0.1)
+            self.do_status()
             try:
-                event = self.queue.get_nowait()
+                while True:
+                    events = self.queue.get_nowait()
+                    for event in events:
+                        type_, code, state = event.ev_type, event.code, event.state 
+                        if type_ == 'Key':
+                            if code == 'BTN_TL' and state == 1:
+                                    cmd = "$J=G91 F200 Z-%f" % STEP_SIZE
+                                    self.client.publish("grblesp32/command", cmd)
+                            elif code == 'BTN_TR' and state == 1:
+                                    cmd = "$J=G91 F200 Z%f" % STEP_SIZE
+                                    self.client.publish("grblesp32/command", cmd)
+                            elif code == 'BTN_SELECT' and state == 1:
+                                    cmd = "M5"
+                                    self.client.publish("grblesp32/command", cmd)
+                            elif code == 'BTN_START' and state == 1:
+                                    if self.led_state < 4:
+                                        self.led_state += 1
+                                    else:
+                                        self.led_state = 0
+                                    strength = (self.led_state)*1024
+                                    if strength == 0:
+                                        strength = 100
+                                    cmd = "M3 S%d" % strength
+                                    self.client.publish("grblesp32/command", cmd)
+                        elif type_ == 'Absolute':
+                            if code in ('ABS_HAT0X', 'ABS_HAT0Y'):
+                                if state in (-1, 1):
+                                    move = STEP_SIZE * state
+                                    dir_ = 'X'
+                                    if code == 'ABS_HAT0X':
+                                        dir_ = 'Y'
+                                    cmd = "$J=G91 F200 %s%f" % (dir_, move)
+                                    self.client.publish("grblesp32/command", cmd)
+                            elif code == 'ABS_X':
+                                if abs(state) > 100:
+                                    print("start x move")
+                                    self.move_x = True
+                                    self.last_x = state
+                                else:
+                                    print("cancel x move")
+                                    self.move_x = False
+                                    self.last_x = 0
+                                    if not self.move_y:
+                                        self.client.publish("grblesp32/cancel", "")
+                            elif code == 'ABS_Y':
+                                if abs(state) > 100:
+                                    print("start y move")
+                                    self.move_y = True
+                                    self.last_y = state
+                                else:
+                                    print("cancel y move")
+                                    self.move_y = False
+                                    self.last_y = 0
+                                    if not self.move_x:
+                                        self.client.publish("grblesp32/cancel", "")
             except:
-                pass
-            else:
-                type_, code, state = event.ev_type, event.code, event.state 
-                if type_ == 'Key':
-                    if code == 'BTN_TL' and state == 1:
-                            cmd = "$J=G91 F10000 Z-%f" % STEP_SIZE
-                            self.client.publish("grblesp32/command", cmd)
-                    elif code == 'BTN_TR' and state == 1:
-                            cmd = "$J=G91 F10000 Z%f" % STEP_SIZE
-                            self.client.publish("grblesp32/command", cmd)
-                    elif code == 'BTN_SELECT' and state == 1:
-                            cmd = "M5"
-                            self.client.publish("grblesp32/command", cmd)
-                    elif code == 'BTN_START' and state == 1:
-                            if self.led_state < 4:
-                                self.led_state += 1
-                            else:
-                                self.led_state = 0
-                            strength = (self.led_state)*1024
-                            if strength == 0:
-                                strength = 100
-                            cmd = "M3 S%d" % strength
-                            self.client.publish("grblesp32/command", cmd)
-                elif type_ == 'Absolute':
-                    if code in ('ABS_HAT0X', 'ABS_HAT0Y'):
-                        if state in (-1, 1):
-                            move = STEP_SIZE * state
-                            dir_ = 'X'
-                            if code == 'ABS_HAT0X':
-                                dir_ = 'Y'
-                            cmd = "$J=G91 F10000 %s%f" % (dir_, move)
-                            self.client.publish("grblesp32/command", cmd)
-                    elif code == 'ABS_X':
-                        if abs(state) > 100:
-                            self.move_x = True
-                            self.last_x = state
-                        else:
-                            self.move_x = False
-                            self.last_x = 0
-                            if not self.move_y:
-                                self.client.publish("grblesp32/cancel", "")
-                    elif code == 'ABS_Y':
-                        if abs(state) > 100:
-                            self.move_y = True
-                            self.last_y = state
-                        else:
-                            self.move_y = False
-                            self.last_y = 0
-                            if not self.move_x:
-                                self.client.publish("grblesp32/cancel", "")
+                pass            
     
 d = Driver()
 d.run()
