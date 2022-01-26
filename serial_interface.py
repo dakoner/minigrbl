@@ -23,7 +23,7 @@ class SerialInterface(threading.Thread):
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.loop_start()
-        self.client.connect("awow.local")
+        self.client.connect("gork.local")
 
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe("grblesp32/command")
@@ -42,8 +42,9 @@ class SerialInterface(threading.Thread):
             else:
                 self.soft_reset()
         elif message.topic == 'grblesp32/cancel':
-            self.write(0x85)
-
+            print("cancel")
+            self.serialport.write(bytes([0x85]))
+            
     def soft_reset(self):
         print("soft reset")
         self.write("\x18") # Ctrl-X
