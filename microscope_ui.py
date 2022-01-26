@@ -5,8 +5,8 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 import paho.mqtt.client as mqtt
 import cv2
 
-XY_STEP_SIZE=1
-Z_STEP_SIZE=10
+XY_STEP_SIZE=.01
+Z_STEP_SIZE=.1
 
 # class PySpinCameraReader(QtCore.QThread):
 #     signal = QtCore.pyqtSignal(QtGui.QImage)
@@ -28,8 +28,8 @@ class Cv2CameraReader(QtCore.QThread):
     def __init__(self):
         super(Cv2CameraReader, self).__init__()
         self.cam = cv2.VideoCapture(0)
-        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 2048)
-        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1536)
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1600)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1200)
         self.width = self.cam.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
     def run(self):
@@ -70,17 +70,17 @@ class Window(QtWidgets.QWidget):
     def keyPressEvent(self, event):
         cmd = None
         if event.key() == QtCore.Qt.Key_Q:
-            cmd = "$J=G91 F10000 Z-%f" % Z_STEP_SIZE
+            cmd = "$J=G91 F100 Z-%f" % Z_STEP_SIZE
         elif event.key() == QtCore.Qt.Key_Z:
-            cmd = "$J=G91 F10000 Z%f" % Z_STEP_SIZE
+            cmd = "$J=G91 F100 Z%f" % Z_STEP_SIZE
         elif event.key() == QtCore.Qt.Key_A:
-            cmd = "$J=G91 F10000 Y-%f" % XY_STEP_SIZE
+            cmd = "$J=G91 F100 Y-%f" % XY_STEP_SIZE
         elif event.key() == QtCore.Qt.Key_D:
-            cmd = "$J=G91 F10000 Y%f" % XY_STEP_SIZE
+            cmd = "$J=G91 F100 Y%f" % XY_STEP_SIZE
         elif event.key() == QtCore.Qt.Key_W:
-            cmd = "$J=G91 F10000 X%f" % XY_STEP_SIZE
+            cmd = "$J=G91 F100 X%f" % XY_STEP_SIZE
         elif event.key() == QtCore.Qt.Key_S:
-            cmd = "$J=G91 F10000 X-%f" % XY_STEP_SIZE
+            cmd = "$J=G91 F100 X-%f" % XY_STEP_SIZE
         elif event.key() == QtCore.Qt.Key_X:
             QtWidgets.qApp.quit()
         if cmd:
@@ -88,7 +88,7 @@ class Window(QtWidgets.QWidget):
 
 
     def imageTo(self, image): 
-        image = QtGui.QPixmap.fromImage(image).scaled(QtWidgets.QApplication.instance().primaryScreen().size(), QtCore.Qt.KeepAspectRatio)
+        image = QtGui.QPixmap.fromImage(image)#.scaled(QtWidgets.QApplication.instance().primaryScreen().size(), QtCore.Qt.KeepAspectRatio)
         self.image_widget.setPixmap(image)
 
 if __name__ == '__main__':
