@@ -9,13 +9,8 @@ import paho.mqtt.client as mqtt
 import websocket
 import threading
 
-from enum import Enum
-class State(Enum):
-    STATE_INIT=0
-    STATE_READY=1
-    STATE_SENDING_COMMAND=5
-    STATE_ERROR=-1
-
+TARGET="microscope"
+MQTT_SERVER="gork.local"
 class WebSocketInterface(threading.Thread):
     
     def on_ws_connect(self, ws):
@@ -25,7 +20,7 @@ class WebSocketInterface(threading.Thread):
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.loop_start()
-        self.client.connect("gork.local")
+        self.client.connect(MQTT_SERVER)
 
     def on_ws_message(self, ws, message):
         try:
@@ -44,7 +39,7 @@ class WebSocketInterface(threading.Thread):
                 message = str(message, 'ascii')
                 for m in message.split("\n"):
                     if m != '':
-                        self.client.publish("grblesp32/output", m)
+                        self.client.publish(f"{TARGET}/output", m)
         except Exception as e:
             print("Caught exception", e)
             
@@ -62,23 +57,23 @@ class WebSocketInterface(threading.Thread):
             on_close=self.on_ws_close)
 
     def on_connect(self, client, userdata, flags, rc):
-        self.client.subscribe("grblesp32/command")
-        self.client.subscribe("grblesp32/reset")
-        self.client.subscribe("grblesp32/cancel")
+        self.client.subscribe(f"{TARGET}/command")
+        self.client.subscribe(f"{TARGET}/reset")
+        self.client.subscribe(f"{TARGET}/cancel")
 
     def on_message(self, client, userdata, message):
-        if message.topic == 'grblesp32/command':
+        if message.topic == f"{TARGET}/command":
             command = message.payload.decode('utf-8')
             if command == '?':
                 self.write(command)
             else:
                 self.write(command + "\n")
-        elif message.topic == 'grblesp32/reset':
+        elif message.topic == f"{TARGET}/reset":
             if message.payload.decode('utf-8') == 'hard':
                 self.reset()
             else:
                 self.soft_reset()
-        elif message.topic == 'grblesp32/cancel':
+        elif message.topic == f"{TARGET}/cancel":
             self.self(chr(0x85))
             
     def soft_reset(self):
