@@ -66,19 +66,16 @@ class SerialInterface(threading.Thread):
         while True:
             if self.serialport.in_waiting > 0:
                 data = self.serialport.read(self.serialport.in_waiting)
-                print("read: ", data)
                 sys.stdout.write(data.decode('utf-8'))
                 self.client.publish("grblesp32/output", data)
             time.sleep(0.01)
 
     def write(self, data):
-        print("writing: ", data)
         self.serialport.write(bytes(data,"utf-8"))
         self.serialport.flush()
 
 
 def main():
-    print("starting")
     s = SerialInterface()
     s.start()
     s.join()    
