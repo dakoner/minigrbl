@@ -9,8 +9,10 @@ import paho.mqtt.client as mqtt
 import websocket
 import threading
 
-TARGET="microscope"
+TARGET="inspectionscope"
 MQTT_SERVER="gork.local"
+WEBSOCKET_SERVER="inspection-6pack.local"
+
 class WebSocketInterface(threading.Thread):
     
     def on_ws_connect(self, ws):
@@ -51,7 +53,7 @@ class WebSocketInterface(threading.Thread):
         super().__init__()
 
         self.wsapp = websocket.WebSocketApp(
-            "ws://fluidnc.local:81", 
+            f"ws://{WEBSOCKET_SERVER}:81", 
             on_open=self.on_ws_connect, 
             on_message=self.on_ws_message, 
             on_close=self.on_ws_close)
@@ -62,6 +64,7 @@ class WebSocketInterface(threading.Thread):
         self.client.subscribe(f"{TARGET}/cancel")
 
     def on_message(self, client, userdata, message):
+        print(message)
         if message.topic == f"{TARGET}/command":
             command = message.payload.decode('utf-8')
             if command == '?':
