@@ -9,9 +9,10 @@ import paho.mqtt.client as mqtt
 import websocket
 import threading
 
-TARGET="inspectionscope"
 MQTT_SERVER="gork.local"
-WEBSOCKET_SERVER="inspection-6pack.local"
+WEBSOCKET_SERVER=sys.argv[1]
+#WEBSOCKET_SERVER="microscope-6pack.local"
+#WEBSOCKET_SERVER="inspection-6pack.local"
 
 class WebSocketInterface(threading.Thread):
     
@@ -41,7 +42,8 @@ class WebSocketInterface(threading.Thread):
                 message = str(message, 'ascii')
                 for m in message.split("\n"):
                     if m != '':
-                        self.client.publish(f"{TARGET}/output", m)
+                        print("Read:", m)
+                        self.client.publish(f"{WEBSOCKET_SERVER}/output", m)
         except Exception as e:
             print("Caught exception", e)
             
@@ -59,25 +61,26 @@ class WebSocketInterface(threading.Thread):
             on_close=self.on_ws_close)
 
     def on_connect(self, client, userdata, flags, rc):
-        self.client.subscribe(f"{TARGET}/command")
-        self.client.subscribe(f"{TARGET}/reset")
-        self.client.subscribe(f"{TARGET}/cancel")
+        self.client.subscribe(f"{WEBSOCKET_SERVER}/command")
+        self.client.subscribe(f"{WEBSOCKET_SERVER}/reset")
+        self.client.subscribe(f"{WEBSOCKET_SERVER}/cancel")
 
     def on_message(self, client, userdata, message):
-        print(message)
-        if message.topic == f"{TARGET}/command":
+        print("Message:", message.topic, message.payload)
+        if message.topic == f"{WEBSOCKET_SERVER}/command":
             command = message.payload.decode('utf-8')
             if command == '?':
                 self.write(command)
             else:
                 self.write(command + "\n")
-        elif message.topic == f"{TARGET}/reset":
+        elif message.topic == f"{WEBSOCKET_SERVER}/reset":
             if message.payload.decode('utf-8') == 'hard':
                 self.reset()
             else:
                 self.soft_reset()
-        elif message.topic == f"{TARGET}/cancel":
-            self.self(chr(0x85))
+        elif message.topic == f"{WEBSOCKET_SERVER}/cancel":
+            print("Cancel")
+            self.write(chr(0x85))
             
     def soft_reset(self):
         self.write("\x18") # Ctrl-X
